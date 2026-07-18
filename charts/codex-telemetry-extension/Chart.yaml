@@ -1,0 +1,15 @@
+apiVersion: v2
+name: codex-telemetry-extension
+description: >
+  Redaction-aware Codex OTel event normalizer and optional evaluator worker
+  for Langfuse observations and scores.
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
+keywords:
+  - codex
+  - langfuse
+  - opentelemetry
+  - observability
+maintainers:
+  - name: Micronis

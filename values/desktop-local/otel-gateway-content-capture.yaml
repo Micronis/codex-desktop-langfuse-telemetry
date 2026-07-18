@@ -1,0 +1,14 @@
+# Overlay: enable logs fan-out to codex-normalizer when content-capture is approved.
+# Usage: helm upgrade ... -f values/desktop-local/otel-gateway.yaml \
+#          -f values/desktop-local/otel-gateway-content-capture.yaml
+
+config:
+  exporters:
+    otlphttp/codex-normalizer:
+      endpoint: ${env:CODEX_NORMALIZER_OTLP_ENDPOINT}
+  service:
+    pipelines:
+      logs:
+        receivers: [otlp]
+        processors: [memory_limiter, batch]
+        exporters: [otlphttp/loki, otlphttp/codex-normalizer]

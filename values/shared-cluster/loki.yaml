@@ -1,0 +1,2 @@
+# Shared-cluster Loki — multi-tenant / object-storage backed as required by platform standards.
+# Retention and StorageClass must be set by platform owners before install.

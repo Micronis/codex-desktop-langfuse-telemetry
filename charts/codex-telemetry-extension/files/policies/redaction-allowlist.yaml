@@ -1,0 +1,46 @@
+# Deny-by-default field allowlist (SPEC §7.2 / §9).
+# Unknown fields are dropped. Tool-result bodies omitted by default.
+
+policy_version: v1
+mode: allowlist
+
+always_allow:
+  - event_type
+  - event_id
+  - time
+  - conversation_id
+  - agent_id
+  - thread_id
+  - parent_conversation_id
+  - model
+  - reasoning_effort
+  - sse_type
+  - input_tokens
+  - output_tokens
+  - total_tokens
+  - duration_ms
+  - status
+
+# Only when content-capture feature gate is enabled AND canary-approved
+content_capture_allow:
+  - user_prompt
+  # assistant_output only after a canary proves a complete field exists
+  # - assistant_output
+
+always_drop:
+  - tool_result_body
+  - command_output
+  - source_snippet
+  - system_prompt
+  - hidden_reasoning
+
+secret_patterns:
+  - "(?i)api[_-]?key\\s*[:=]\\s*\\S+"
+  - "(?i)authorization\\s*[:=]\\s*\\S+"
+  - "(?i)bearer\\s+[A-Za-z0-9._\\-]+"
+  - "(?i)password\\s*[:=]\\s*\\S+"
+  - "sk-[A-Za-z0-9]{20,}"
+
+path_redaction:
+  enabled: true
+  replace_with: "<path>"

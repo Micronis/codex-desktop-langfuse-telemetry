@@ -1,0 +1,100 @@
+# OTel gateway — desktop-local profile (SPEC §7.1)
+# Interface contract for open-telemetry/opentelemetry-collector chart.
+# Confirm extraEnvs / service / ports against the pinned chart version.
+
+mode: deployment
+replicaCount: 1
+
+image:
+  repository: otel/opentelemetry-collector-contrib
+
+# Bind Service for Docker Desktop host access; validate loopback-only from Windows.
+service:
+  type: LoadBalancer
+  # Prefer annotations / externalTrafficPolicy as supported by Docker Desktop K8s.
+  # Fallback: scripts/expose-otel-gateway.sh uses kubectl port-forward to 127.0.0.1.
+
+ports:
+  otlp:
+    enabled: true
+    containerPort: 4317
+    servicePort: 4317
+    protocol: TCP
+    appProtocol: grpc
+  otlp-http:
+    enabled: true
+    containerPort: 4318
+    servicePort: 4318
+    protocol: TCP
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 256Mi
+  limits:
+    cpu: 500m
+    memory: 512Mi
+
+# Populate from Secret / install script — do not commit real values.
+extraEnvs:
+  - name: LANGFUSE_OTLP_ENDPOINT
+    valueFrom:
+      secretKeyRef:
+        name: otel-gateway-secrets
+        key: langfuse-otlp-endpoint
+  - name: LANGFUSE_OTLP_AUTHORIZATION
+    valueFrom:
+      secretKeyRef:
+        name: otel-gateway-secrets
+        key: langfuse-otlp-authorization
+  - name: LOKI_OTLP_ENDPOINT
+    value: http://loki-gateway.agent-observability.svc.cluster.local:80/otlp
+  # Only wired when content-capture is enabled (see logs pipeline below).
+  - name: CODEX_NORMALIZER_OTLP_ENDPOINT
+    value: http://codex-normalizer.agent-observability.svc.cluster.local:4318
+
+config:
+  receivers:
+    otlp:
+      protocols:
+        grpc:
+          endpoint: 0.0.0.0:4317
+        http:
+          endpoint: 0.0.0.0:4318
+
+  processors:
+    memory_limiter:
+      check_interval: 5s
+      limit_percentage: 75
+      spike_limit_percentage: 25
+    batch: {}
+
+  exporters:
+    otlphttp/langfuse:
+      endpoint: ${env:LANGFUSE_OTLP_ENDPOINT}
+      headers:
+        Authorization: ${env:LANGFUSE_OTLP_AUTHORIZATION}
+        x-langfuse-ingestion-version: "4"
+    otlphttp/loki:
+      endpoint: ${env:LOKI_OTLP_ENDPOINT}
+    # Enabled only when content-capture gate is on — see content-capture overlay.
+    # otlphttp/codex-normalizer:
+    #   endpoint: ${env:CODEX_NORMALIZER_OTLP_ENDPOINT}
+    debug:
+      verbosity: basic
+
+  service:
+    pipelines:
+      traces:
+        receivers: [otlp]
+        processors: [memory_limiter, batch]
+        exporters: [otlphttp/langfuse]
+      logs:
+        receivers: [otlp]
+        processors: [memory_limiter, batch]
+        # Metadata-only: Loki only. Add otlphttp/codex-normalizer when content-capture is enabled.
+        exporters: [otlphttp/loki]
+      metrics:
+        receivers: [otlp]
+        processors: [memory_limiter, batch]
+        exporters: [debug]

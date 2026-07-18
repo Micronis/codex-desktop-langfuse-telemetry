@@ -1,0 +1,5 @@
+# Shared-cluster Langfuse — use managed Postgres/ClickHouse/Redis or approved stateful sets.
+# Do not deploy chart-managed disposable stores for production without platform ownership.
+
+# postgresql.deploy / clickhouse.deploy / redis.deploy → false once external endpoints exist
+# Wire connection strings via external Secrets / workload identity — never plaintext values.

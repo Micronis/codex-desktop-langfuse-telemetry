@@ -1,0 +1,79 @@
+# First-party chart defaults. Both workloads are disabled until content-capture
+# (and evaluation) are explicitly enabled per SPEC §7.2.
+
+nameOverride: ""
+fullnameOverride: ""
+
+global:
+  contentCapture:
+    enabled: false
+  normalizerVersion: "0.1.0"
+  redactionPolicyVersion: "v1"
+
+normalizer:
+  enabled: false
+  replicaCount: 1
+  image:
+    repository: codex-normalizer
+    tag: "0.1.0"
+    pullPolicy: IfNotPresent
+  service:
+    type: ClusterIP
+    port: 4318
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+  env:
+    langfuseHost: "http://langfuse-web.langfuse.svc.cluster.local:3000"
+    schemaVersion: "v1"
+  # Deny-by-default field allowlist; see files/policies/redaction-allowlist.yaml
+  otlp:
+    path: /v1/logs
+
+evaluator:
+  enabled: false
+  replicaCount: 0
+  image:
+    repository: codex-evaluator
+    tag: "0.1.0"
+    pullPolicy: IfNotPresent
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      cpu: 250m
+      memory: 256Mi
+  llmJudge:
+    enabled: false
+    # Approved model endpoint only; empty means no external egress for judging
+    endpoint: ""
+  scores:
+    - name: task_completed
+      type: boolean
+      producer: human_or_deterministic
+    - name: execution_efficiency
+      type: numeric
+      producer: deterministic
+    - name: response_quality
+      type: numeric
+      producer: human_or_llm_judge
+      rubricVersion: v1
+    - name: prompt_clarity
+      type: numeric
+      producer: human_or_llm_judge
+      rubricVersion: v1
+    - name: safety_or_privacy_violation
+      type: boolean
+      producer: deterministic_or_human
+
+networkPolicy:
+  enabled: true
+
+serviceAccount:
+  create: true
+  name: ""

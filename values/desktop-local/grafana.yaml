@@ -1,0 +1,54 @@
+# Grafana — desktop-local (SPEC §7.4)
+# ClusterIP; admin via Secret; Loki datasource provisioned; folder Codex Desktop.
+
+replicas: 1
+
+admin:
+  existingSecret: grafana-admin
+  userKey: admin-user
+  passwordKey: admin-password
+
+persistence:
+  enabled: true
+  size: 2Gi
+
+resources:
+  requests:
+    cpu: 50m
+    memory: 128Mi
+  limits:
+    cpu: 500m
+    memory: 512Mi
+
+service:
+  type: ClusterIP
+
+datasources:
+  datasources.yaml:
+    apiVersion: 1
+    datasources:
+      - name: Loki
+        type: loki
+        access: proxy
+        url: http://loki-gateway.agent-observability.svc.cluster.local
+        isDefault: true
+        jsonData:
+          timeout: 60
+
+dashboardProviders:
+  dashboardproviders.yaml:
+    apiVersion: 1
+    providers:
+      - name: codex-desktop
+        orgId: 1
+        folder: Codex Desktop
+        type: file
+        disableDeletion: false
+        options:
+          path: /var/lib/grafana/dashboards/codex-desktop
+
+dashboardsConfigMaps:
+  codex-desktop: grafana-dashboards-codex-desktop
+
+# Dashboards must be built from observed event attributes (SPEC §8), not guessed paths.
+# Place exported JSON under dashboards/codex-desktop/ after Phase 3 validation.

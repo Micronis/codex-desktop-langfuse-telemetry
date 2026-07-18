@@ -1,0 +1,29 @@
+# codex-telemetry-extension — desktop-local defaults (SPEC §7.2)
+# Both workloads disabled until content-capture / evaluation phases.
+
+global:
+  contentCapture:
+    enabled: false
+  normalizerVersion: "0.1.0"
+  redactionPolicyVersion: "v1"
+
+normalizer:
+  enabled: false
+  replicaCount: 1
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
+evaluator:
+  enabled: false
+  replicaCount: 0
+  llmJudge:
+    enabled: false
+    endpoint: ""
+
+networkPolicy:
+  enabled: true

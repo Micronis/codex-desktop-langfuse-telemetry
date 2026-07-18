@@ -1,0 +1,51 @@
+# Local secrets and credentials — never commit
+*.secret
+*.secrets
+.env
+.env.*
+!.env.example
+secrets/
+**/secrets/*.yaml
+**/secrets/*.yml
+values/**/*-secrets.yaml
+values/**/*-secrets.yml
+*.pem
+*.key
+.id_rsa*
+
+# Helm
+charts/**/charts/
+*.tgz
+.helm/
+
+# Kubernetes / kubeconfig copies
+kubeconfig*
+*.kubeconfig
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*~
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+dist/
+*.egg-info/
+
+# Node (if tooling added later)
+node_modules/
+
+# Local scratch / canary captures
+samples/
+canary/
+*.local.yaml
+*.local.yml

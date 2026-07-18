@@ -1,0 +1,17 @@
+# Shared-cluster extension — same workloads; secrets from external secret manager.
+
+global:
+  contentCapture:
+    enabled: false
+
+normalizer:
+  enabled: false
+
+evaluator:
+  enabled: false
+  llmJudge:
+    enabled: false
+    endpoint: ""
+
+networkPolicy:
+  enabled: true

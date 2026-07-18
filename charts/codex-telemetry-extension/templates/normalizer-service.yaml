@@ -1,0 +1,19 @@
+{{- if .Values.normalizer.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: codex-normalizer
+  labels:
+    {{- include "codex-telemetry-extension.labels" . | nindent 4 }}
+    app.kubernetes.io/component: normalizer
+spec:
+  type: {{ .Values.normalizer.service.type }}
+  selector:
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/component: normalizer
+  ports:
+    - name: otlp-http
+      port: {{ .Values.normalizer.service.port }}
+      targetPort: otlp-http
+      protocol: TCP
+{{- end }}

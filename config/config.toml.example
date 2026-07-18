@@ -1,0 +1,20 @@
+# ChatGPT desktop → Settings → Configuration → Open config.toml
+# Add at USER scope, not repo scope. Validate against installed Codex version.
+# SPEC §6 — metadata-only starting point.
+
+[otel]
+environment = "desktop-local"
+log_user_prompt = false
+
+# Send logs/events to the local gateway.
+exporter = { otlp-grpc = { endpoint = "http://127.0.0.1:4317" } }
+
+# Send trace data to the same local gateway.
+trace_exporter = { otlp-grpc = { endpoint = "http://127.0.0.1:4317" } }
+
+# Optional on day one; retain only if a receiver sample confirms useful metrics.
+metrics_exporter = { otlp-grpc = { endpoint = "http://127.0.0.1:4317" } }
+
+# --- Content-capture (Phase 4, explicit opt-in) ---
+# log_user_prompt = true
+# Use Langfuse project `codex-desktop-content` with separate credentials.

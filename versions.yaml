@@ -1,0 +1,35 @@
+# Pin resolved Helm chart versions after `helm repo update`.
+# Update this file (and any Chart.lock artifacts) before applying releases.
+
+repositories:
+  open-telemetry: https://open-telemetry.github.io/opentelemetry-helm-charts
+  langfuse: https://langfuse.github.io/langfuse-k8s
+  grafana: https://grafana.github.io/helm-charts
+
+charts:
+  otel-gateway:
+    repo: open-telemetry
+    chart: opentelemetry-collector
+    # Fill after resolving: e.g. version: "0.108.0"
+    version: ""
+  langfuse:
+    repo: langfuse
+    chart: langfuse
+    version: ""
+  loki:
+    repo: grafana
+    chart: loki
+    version: ""
+  grafana:
+    repo: grafana
+    chart: grafana
+    version: ""
+  codex-telemetry-extension:
+    repo: local
+    chart: charts/codex-telemetry-extension
+    version: "0.1.0"
+
+notes: |
+  Official chart repositories only. Pin the resolved versions in this file
+  after the first successful `helm search repo` / install. Do not float to latest
+  on workstation reinstalls without recording the change.

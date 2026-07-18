@@ -1,0 +1,72 @@
+# Langfuse v3 — desktop-local (SPEC §7.3)
+# Start from official chart defaults; ClusterIP only; no Ingress.
+
+# Chart field names vary by version — confirm against pinned langfuse/langfuse chart.
+langfuse:
+  salt:
+    secretKeyRef:
+      name: langfuse-secrets
+      key: salt
+  nextauth:
+    secret:
+      secretKeyRef:
+        name: langfuse-secrets
+        key: nextauth-secret
+
+# Persistence for chart-managed stores (local Docker Desktop PVCs)
+postgresql:
+  deploy: true
+  auth:
+    existingSecret: langfuse-secrets
+    secretKeys:
+      userPasswordKey: postgres-password
+  primary:
+    persistence:
+      enabled: true
+      size: 5Gi
+    resources:
+      requests:
+        cpu: 100m
+        memory: 256Mi
+      limits:
+        cpu: "1"
+        memory: 1Gi
+
+clickhouse:
+  deploy: true
+  auth:
+    existingSecret: langfuse-secrets
+    existingSecretKey: clickhouse-password
+  persistence:
+    enabled: true
+    size: 20Gi
+  resources:
+    requests:
+      cpu: 500m
+      memory: 2Gi
+    limits:
+      cpu: "2"
+      memory: 4Gi
+
+redis:
+  deploy: true
+  auth:
+    existingSecret: langfuse-secrets
+    existingSecretPasswordKey: redis-password
+  primary:
+    persistence:
+      enabled: true
+      size: 5Gi
+    resources:
+      requests:
+        cpu: 50m
+        memory: 128Mi
+      limits:
+        cpu: 250m
+        memory: 512Mi
+
+# Service remains ClusterIP; access via kubectl port-forward.
+# Retention target: 14 days (enforce via Langfuse project settings / ops runbook).
+
+# After install: create org + project `codex-desktop` (metadata-only).
+# Content project `codex-desktop-content` is separate and opt-in.

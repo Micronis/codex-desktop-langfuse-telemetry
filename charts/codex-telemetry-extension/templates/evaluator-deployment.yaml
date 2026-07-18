@@ -1,0 +1,62 @@
+{{- if .Values.evaluator.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "codex-telemetry-extension.evaluator.fullname" . }}
+  labels:
+    {{- include "codex-telemetry-extension.labels" . | nindent 4 }}
+    app.kubernetes.io/component: evaluator
+spec:
+  replicas: {{ .Values.evaluator.replicaCount }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: {{ .Release.Name }}
+      app.kubernetes.io/component: evaluator
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/instance: {{ .Release.Name }}
+        app.kubernetes.io/component: evaluator
+    spec:
+      serviceAccountName: {{ include "codex-telemetry-extension.serviceAccountName" . }}
+      containers:
+        - name: codex-evaluator
+          image: "{{ .Values.evaluator.image.repository }}:{{ .Values.evaluator.image.tag }}"
+          imagePullPolicy: {{ .Values.evaluator.image.pullPolicy }}
+          env:
+            - name: LANGFUSE_HOST
+              value: {{ .Values.normalizer.env.langfuseHost | quote }}
+            - name: LLM_JUDGE_ENABLED
+              value: {{ .Values.evaluator.llmJudge.enabled | quote }}
+            - name: LLM_JUDGE_ENDPOINT
+              value: {{ .Values.evaluator.llmJudge.endpoint | quote }}
+            - name: LANGFUSE_PUBLIC_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "codex-telemetry-extension.fullname" . }}-langfuse
+                  key: public-key
+            - name: LANGFUSE_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "codex-telemetry-extension.fullname" . }}-langfuse
+                  key: secret-key
+          volumeMounts:
+            - name: config
+              mountPath: /etc/codex-evaluator
+              readOnly: true
+          resources:
+            {{- toYaml .Values.evaluator.resources | nindent 12 }}
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          ports:
+            - name: http
+              containerPort: 8080
+      volumes:
+        - name: config
+          configMap:
+            name: {{ include "codex-telemetry-extension.fullname" . }}-config
+{{- end }}

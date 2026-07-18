@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "codex-telemetry-extension.fullname" . }}-config
+  labels:
+    {{- include "codex-telemetry-extension.labels" . | nindent 4 }}
+data:
+  normalizer_version: {{ .Values.global.normalizerVersion | quote }}
+  redaction_policy_version: {{ .Values.global.redactionPolicyVersion | quote }}
+  content_capture: {{ .Values.global.contentCapture.enabled | quote }}
+  schema-v1.json: |
+{{ .Files.Get "files/schemas/codex-sse-event-v1.json" | indent 4 }}
+  redaction-allowlist.yaml: |
+{{ .Files.Get "files/policies/redaction-allowlist.yaml" | indent 4 }}
+  score-catalogue.yaml: |
+{{ .Files.Get "files/policies/score-catalogue.yaml" | indent 4 }}

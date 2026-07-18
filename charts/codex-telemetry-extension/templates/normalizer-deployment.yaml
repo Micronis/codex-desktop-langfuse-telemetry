@@ -1,0 +1,66 @@
+{{- if .Values.normalizer.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "codex-telemetry-extension.normalizer.fullname" . }}
+  labels:
+    {{- include "codex-telemetry-extension.labels" . | nindent 4 }}
+    app.kubernetes.io/component: normalizer
+spec:
+  replicas: {{ .Values.normalizer.replicaCount }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: {{ .Release.Name }}
+      app.kubernetes.io/component: normalizer
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/instance: {{ .Release.Name }}
+        app.kubernetes.io/component: normalizer
+    spec:
+      serviceAccountName: {{ include "codex-telemetry-extension.serviceAccountName" . }}
+      containers:
+        - name: codex-normalizer
+          image: "{{ .Values.normalizer.image.repository }}:{{ .Values.normalizer.image.tag }}"
+          imagePullPolicy: {{ .Values.normalizer.image.pullPolicy }}
+          ports:
+            - name: otlp-http
+              containerPort: {{ .Values.normalizer.service.port }}
+          env:
+            - name: LANGFUSE_HOST
+              value: {{ .Values.normalizer.env.langfuseHost | quote }}
+            - name: SCHEMA_VERSION
+              value: {{ .Values.normalizer.env.schemaVersion | quote }}
+            - name: NORMALIZER_VERSION
+              value: {{ .Values.global.normalizerVersion | quote }}
+            - name: REDACTION_POLICY_VERSION
+              value: {{ .Values.global.redactionPolicyVersion | quote }}
+            - name: CONTENT_CAPTURE
+              value: {{ .Values.global.contentCapture.enabled | quote }}
+            - name: LANGFUSE_PUBLIC_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "codex-telemetry-extension.fullname" . }}-langfuse
+                  key: public-key
+            - name: LANGFUSE_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "codex-telemetry-extension.fullname" . }}-langfuse
+                  key: secret-key
+          volumeMounts:
+            - name: config
+              mountPath: /etc/codex-normalizer
+              readOnly: true
+          resources:
+            {{- toYaml .Values.normalizer.resources | nindent 12 }}
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: otlp-http
+            initialDelaySeconds: 5
+            periodSeconds: 10
+      volumes:
+        - name: config
+          configMap:
+            name: {{ include "codex-telemetry-extension.fullname" . }}-config
+{{- end }}

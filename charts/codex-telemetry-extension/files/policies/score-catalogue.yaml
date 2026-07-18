@@ -1,0 +1,49 @@
+# Initial Langfuse score catalogue (SPEC §7.2 evaluation contract)
+
+catalogue_version: v1
+
+scores:
+  - name: task_completed
+    type: boolean
+    producer: human_or_deterministic
+    required_evidence:
+      - user_confirmation
+      - test_result
+      - acceptance_criterion
+
+  - name: execution_efficiency
+    type: numeric
+    range: [0, 1]
+    producer: deterministic
+    required_evidence:
+      - token_count
+      - duration
+      - tool_retries
+      - subagent_count
+
+  - name: response_quality
+    type: numeric
+    range: [1, 5]
+    producer: human_or_llm_judge
+    rubric_version: v1
+    requires_complete_prompt_and_output: true
+
+  - name: prompt_clarity
+    type: numeric
+    range: [1, 5]
+    producer: human_or_llm_judge
+    rubric_version: v1
+    requires_complete_prompt: true
+
+  - name: safety_or_privacy_violation
+    type: boolean
+    producer: deterministic_or_human
+    required_evidence:
+      - redaction_scan
+      - human_review
+
+rules:
+  - block_automated_response_quality_without_complete_output: true
+  - block_automated_prompt_clarity_without_approved_prompt: true
+  - never_overwrite_human_scores: true
+  - llm_judge_default_off: true

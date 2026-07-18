@@ -1,0 +1,43 @@
+# Restrict otel-gateway egress (SPEC §5.3)
+# Adjust podSelector labels to match the installed collector chart version.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: otel-gateway-egress
+  namespace: agent-observability
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: opentelemetry-collector
+  policyTypes:
+    - Egress
+  egress:
+    - ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: langfuse
+      ports:
+        - protocol: TCP
+          port: 3000
+    - to:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: loki
+      ports:
+        - protocol: TCP
+          port: 3100
+        - protocol: TCP
+          port: 8080
+    # codex-normalizer — only when content-capture enabled
+    - to:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/component: normalizer
+      ports:
+        - protocol: TCP
+          port: 4318

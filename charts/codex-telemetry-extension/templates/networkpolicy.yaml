@@ -1,0 +1,50 @@
+{{- if and .Values.networkPolicy.enabled .Values.normalizer.enabled }}
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "codex-telemetry-extension.normalizer.fullname" . }}
+  labels:
+    {{- include "codex-telemetry-extension.labels" . | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/instance: {{ .Release.Name }}
+      app.kubernetes.io/component: normalizer
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: opentelemetry-collector
+      ports:
+        - protocol: TCP
+          port: {{ .Values.normalizer.service.port }}
+  egress:
+    # DNS
+    - to:
+        - namespaceSelector: {}
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+    # Langfuse web (SDK/API)
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: langfuse
+      ports:
+        - protocol: TCP
+          port: 3000
+{{- if and .Values.evaluator.enabled .Values.evaluator.llmJudge.enabled .Values.evaluator.llmJudge.endpoint }}
+    # Optional approved LLM-as-a-Judge endpoint only when explicitly enabled
+    - to:
+        - ipBlock:
+            cidr: 0.0.0.0/0
+      ports:
+        - protocol: TCP
+          port: 443
+{{- end }}
+{{- end }}

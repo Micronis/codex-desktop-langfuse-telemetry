@@ -1,0 +1,21 @@
+# Shared-cluster OTel gateway overlay (SPEC §4.4)
+# Authenticated private network only — never an anonymous public OTLP listener.
+
+mode: deployment
+replicaCount: 2
+
+service:
+  type: ClusterIP
+
+# Prefer Ingress/Gateway API with mTLS or VPN-fronted private endpoint.
+# Placeholder — replace with org ingress annotations and auth.
+
+resources:
+  requests:
+    cpu: 200m
+    memory: 512Mi
+  limits:
+    cpu: "1"
+    memory: 1Gi
+
+# Pipelines mirror desktop-local contract; endpoints come from cluster Secrets.
